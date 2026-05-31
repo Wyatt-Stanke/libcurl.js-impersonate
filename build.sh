@@ -60,5 +60,8 @@ OUT_DIR="$OUT_DIR" bash build.sh release single_file
 
 pnpx --package=typescript tsc --declaration --allowJs --emitDeclarationOnly --ignoreConfig "$OUT_DIR/libcurl_full.mjs"
 
+bash "$SCRIPT_DIR/scripts/compile-ts.sh"
+
 echo "=== Build complete ==="
 echo "Output: $OUT_DIR/libcurl_full.mjs"
+echo "NPM package: $SCRIPT_DIR/dist/"

@@ -175,7 +175,7 @@ export class LibcurlImpersonateClient implements ProxyTransport {
 		}
 		const socket = new libcurl.WebSocket(url.toString(), protocols, {
 			headers: headersObj,
-		});
+		}) as any;
 		socket.binaryType = "arraybuffer";
 		socket.onopen = () => onopen("", "");
 		socket.onclose = (event: any) => onclose(event.code, event.reason);

@@ -3,12 +3,21 @@
   "version": "0.1.0",
   "description": "",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "bash build.sh",
+    "compile": "bash scripts/compile-ts.sh",
     "test": "playwright test",
     "test:install": "playwright install chromium --with-deps"
   },
