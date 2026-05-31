@@ -25,10 +25,10 @@
     "@mercuryworkshop/proxy-transports": "^1.0.2"
   },
   "devDependencies": {
-    "@mercuryworkshop/wisp-js": "^0.4.1",
-    "@playwright/test": "^1.60.0",
-    "execa": "^9.6.1",
-    "typescript": "^6.0.3"
+    "@mercuryworkshop/wisp-js": "0.4.1",
+    "@playwright/test": "1.60.0",
+    "execa": "9.6.1",
+    "typescript": "6.0.3"
   },
   "license": "AGPL-3.0-only",
   "packageManager": "pnpm@11.5.0"
