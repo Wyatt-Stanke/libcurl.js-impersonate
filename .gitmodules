@@ -1,0 +1,9 @@
+[submodule "libcurl.js"]
+	path = libcurl.js
+	url = https://github.com/ading2210/libcurl.js
+	ignore = dirty
+
+[submodule "curl-impersonate"]
+	path = curl-impersonate
+	url = https://github.com/lexiforest/curl-impersonate
+	ignore = dirty

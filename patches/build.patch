@@ -1,0 +1,24 @@
+--- a/build.sh
++++ b/build.sh
+@@ -37,8 +37,8 @@
+ 
+ #compile options
+ RUNTIME_METHODS="addFunction,removeFunction,allocate,ALLOC_NORMAL"
+-COMPILER_OPTIONS="-o $MODULE_FILE -lcurl -lmbedtls -lmbedcrypto -lmbedx509 -lcjson -lz -lbrotlidec -lbrotlicommon -lnghttp2 -I $INCLUDE_DIR -L $LIB_DIR"
+-EMSCRIPTEN_OPTIONS="-lwebsocket.js -sENVIRONMENT=worker,web -sASSERTIONS=1 -sLLD_REPORT_UNDEFINED -sALLOW_TABLE_GROWTH -sALLOW_MEMORY_GROWTH -sNO_EXIT_RUNTIME -sEXPORTED_FUNCTIONS=$EXPORTED_FUNCS -sEXPORTED_RUNTIME_METHODS=$RUNTIME_METHODS"
++COMPILER_OPTIONS="-o $MODULE_FILE -lcurl -lssl -lcrypto -lcjson -lz -lbrotlidec -lbrotlicommon -lnghttp2 -lzstd -I $INCLUDE_DIR -L $LIB_DIR"
++EMSCRIPTEN_OPTIONS="-lwebsocket.js -sENVIRONMENT=worker,web -sASSERTIONS=1 -sLLD_REPORT_UNDEFINED -sALLOW_TABLE_GROWTH -sALLOW_MEMORY_GROWTH -sNO_EXIT_RUNTIME -sEXPORTED_FUNCTIONS=$EXPORTED_FUNCS -sEXPORTED_RUNTIME_METHODS=$RUNTIME_METHODS" # TODO: add "--emit-tsd out.d.ts" @ emscripten 6.0.0
+ 
+ #clean output dir
+ rm -rf $OUT_DIR
+@@ -77,6 +77,10 @@
+   echo "note: building as a single js file"
+ fi
+ 
++# Patch certs.c to use BoringSSL EVP_EncodeBlock instead of mbedTLS
++sed -i 's|#include "mbedtls/base64.h"|#include "openssl/evp.h"|' $C_DIR/certs.c
++sed -i 's|mbedtls_base64_encode(cacert_pem + offset, b64_len+1, \&olen, cert, cert_len);|olen = EVP_EncodeBlock(cacert_pem + offset, cert, cert_len);|' $C_DIR/certs.c
++
+ #ensure deps are compiled
+ tools/all_deps.sh
+ tools/generate_cert.sh

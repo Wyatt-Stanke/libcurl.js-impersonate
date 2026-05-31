@@ -1,0 +1,97 @@
+--- a/libcurl/http.c
++++ b/libcurl/http.c
+@@ -4,18 +4,92 @@
+ 
+ #include "cjson/cJSON.h"
+ #include "curl/curl.h"
++#include "openssl/ssl.h"
++#include "openssl/pool.h"
++#include "brotli/decode.h"
+ 
+ #include "types.h"
+ #include "util.h"
+ 
++/* Mimic Chrome 136 */
++static int decompress_brotli_cert(SSL *ssl, CRYPTO_BUFFER **out,
++    size_t uncompressed_len, const uint8_t *in, size_t in_len) {
++  (void)ssl;
++  uint8_t *data;
++  CRYPTO_BUFFER *buf = CRYPTO_BUFFER_alloc(&data, uncompressed_len);
++  if (!buf) return 0;
++  size_t out_size = uncompressed_len;
++  BrotliDecoderResult res =
++      BrotliDecoderDecompress(in_len, in, &out_size, data);
++  if (res != BROTLI_DECODER_RESULT_SUCCESS || out_size != uncompressed_len) {
++    CRYPTO_BUFFER_free(buf);
++    return 0;
++  }
++  *out = buf;
++  return 1;
++}
++
++static const uint16_t kChrome136SigAlgs[] = {
++  SSL_SIGN_ECDSA_SECP256R1_SHA256,
++  SSL_SIGN_RSA_PSS_RSAE_SHA256,
++  SSL_SIGN_RSA_PKCS1_SHA256,
++  SSL_SIGN_ECDSA_SECP384R1_SHA384,
++  SSL_SIGN_RSA_PSS_RSAE_SHA384,
++  SSL_SIGN_RSA_PKCS1_SHA384,
++  SSL_SIGN_RSA_PSS_RSAE_SHA512,
++  SSL_SIGN_RSA_PKCS1_SHA512,
++};
++
++static CURLcode chrome_ssl_ctx_cb(CURL *curl, void *sslctx, void *parm) {
++  (void)curl; (void)parm;
++  SSL_CTX *ctx = (SSL_CTX *)sslctx;
++
++  SSL_CTX_set_grease_enabled(ctx, 1);
++  SSL_CTX_set_permute_extensions(ctx, 1);
++  SSL_CTX_set_cipher_list(
++    ctx,
++    "TLS_AES_128_GCM_SHA256:"
++    "TLS_AES_256_GCM_SHA384:"
++    "TLS_CHACHA20_POLY1305_SHA256:"
++    "ECDHE-ECDSA-AES128-GCM-SHA256:"
++    "ECDHE-RSA-AES128-GCM-SHA256:"
++    "ECDHE-ECDSA-AES256-GCM-SHA384:"
++    "ECDHE-RSA-AES256-GCM-SHA384:"
++    "ECDHE-ECDSA-CHACHA20-POLY1305:"
++    "ECDHE-RSA-CHACHA20-POLY1305:"
++    "ECDHE-RSA-AES128-SHA:"
++    "ECDHE-RSA-AES256-SHA:"
++    "AES128-GCM-SHA256:"
++    "AES256-GCM-SHA384:"
++    "AES128-SHA:"
++    "AES256-SHA"
++  );
++  SSL_CTX_set1_curves_list(ctx, "X25519MLKEM768:X25519:P-256:P-384");
++  SSL_CTX_enable_ocsp_stapling(ctx);
++  SSL_CTX_enable_signed_cert_timestamps(ctx);
++  SSL_CTX_clear_options(ctx, SSL_OP_NO_TICKET);
++  SSL_CTX_add_cert_compression_alg(ctx, TLSEXT_cert_compression_brotli, NULL, decompress_brotli_cert);
++  SSL_CTX_set_verify_algorithm_prefs(ctx, kChrome136SigAlgs, sizeof(kChrome136SigAlgs) / sizeof(kChrome136SigAlgs[0]));
++
++  return CURLE_OK;
++}
++
+ void http_set_options(CURL* http_handle, const char* json_params, const char* body, int body_length) {
+   struct RequestInfo *request_info = get_request_info(http_handle);
+ 
+   //some default options
+   curl_easy_setopt(http_handle, CURLOPT_FOLLOWLOCATION, 1);
+-  curl_easy_setopt(http_handle, CURLOPT_ACCEPT_ENCODING, "");
++  curl_easy_setopt(http_handle, CURLOPT_ACCEPT_ENCODING, "gzip, deflate, br, zstd");
+   curl_easy_setopt(http_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+-  curl_easy_setopt(http_handle, CURLOPT_IGNORE_ONION, 1L);
++  curl_easy_setopt(http_handle, CURLOPT_SSL_CTX_FUNCTION, chrome_ssl_ctx_cb);
++  curl_easy_setopt(http_handle, CURLOPT_SSL_CTX_DATA, NULL);
++  curl_easy_setopt(http_handle, CURLOPT_SSL_ENABLE_ALPS, 1L);
++  curl_easy_setopt(http_handle, CURLOPT_TLS_USE_NEW_ALPS_CODEPOINT, 1L);
++  curl_easy_setopt(http_handle, CURLOPT_ECH, "true");
++  curl_easy_setopt(http_handle, CURLOPT_HTTP2_PSEUDO_HEADERS_ORDER, "masp");
++  curl_easy_setopt(http_handle, CURLOPT_HTTP2_WINDOW_UPDATE, 15663105L);
++  curl_easy_setopt(http_handle, CURLOPT_HTTP2_NO_PRIORITY, 1L);
++
+ 
+   //parse json options
+   cJSON* request_json = cJSON_Parse(json_params);
