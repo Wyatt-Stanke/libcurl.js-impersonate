@@ -23,10 +23,11 @@ git submodule update --init --recursive
 CLIENT_DIR="$LIBCURL_JS_DIR/client"
 
 echo "Applying build overrides..."
-git -C "$LIBCURL_JS_DIR" checkout -- client/build.sh client/tools/curl.sh client/libcurl/http.c
+git -C "$LIBCURL_JS_DIR" checkout -- client/build.sh client/tools/curl.sh client/libcurl/http.c client/fragments/load_later.js client/fragments/force_wsproxy.js client/javascript/main.js
 patch -p1 -d "$CLIENT_DIR" <"$SCRIPT_DIR/patches/build.patch"
 patch -p1 -d "$CLIENT_DIR" <"$SCRIPT_DIR/patches/curl.patch"
 patch -p1 -d "$CLIENT_DIR" <"$SCRIPT_DIR/patches/http.patch"
+patch -p1 -d "$CLIENT_DIR" <"$SCRIPT_DIR/patches/fragments.patch"
 
 cp "$SCRIPT_DIR/tools/boringssl.sh" "$CLIENT_DIR/tools/boringssl.sh"
 cp "$SCRIPT_DIR/tools/zstd.sh" "$CLIENT_DIR/tools/zstd.sh"
@@ -55,6 +56,7 @@ fi
 mkdir -p "$OUT_DIR"
 cd "$CLIENT_DIR"
 OUT_DIR="$OUT_DIR" bash build.sh release single_file
+
 pnpx --package=typescript tsc --declaration --allowJs --emitDeclarationOnly --ignoreConfig "$OUT_DIR/libcurl_full.mjs"
 
 echo "=== Build complete ==="

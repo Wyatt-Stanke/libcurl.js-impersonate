@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script defer src="/out/libcurl_full.js" onload="libcurl.load_wasm()"></script>
+	</head>
+	<body>
+		<p>libcurl.js-impersonate e2e tests</p>
+		<script>
+		async function runTests() {
+			libcurl.set_websocket("ws://localhost:7891/ws/");
+
+			const results = [];
+
+			async function test(name, fn) {
+				try {
+					await fn();
+					results.push({ name, status: "pass" });
+				} catch (e) {
+					results.push({ name, status: "fail", error: String(e) });
+					console.error(`FAIL [${name}]:`, e);
+				}
+			}
+
+			await test("wasm-loaded", () => {
+				if (!libcurl.ready)
+					throw new Error("libcurl not ready after load_wasm()");
+				if (!libcurl.version?.lib)
+					throw new Error("libcurl.version.lib is empty");
+				console.log("libcurl version:", libcurl.version.lib);
+			});
+
+			await test("fetch-example-com", async () => {
+				const r = await libcurl.fetch("https://example.com/");
+				if (r.status !== 200) throw new Error(`Expected 200, got ${r.status}`);
+				const body = await r.text();
+				if (!body.includes("Example Domain")) {
+					throw new Error("Unexpected body content");
+				}
+			});
+
+			await test("response-headers", async () => {
+				const r = await libcurl.fetch("https://example.com/");
+				await r.text();
+				const ct = r.headers.get("content-type");
+				if (!ct) throw new Error("Missing content-type header");
+			});
+
+			const failed = results.filter((r) => r.status === "fail");
+			const summary = document.createElement("div");
+			summary.id = "test-summary";
+			summary.setAttribute("data-total", String(results.length));
+			summary.setAttribute("data-failed", String(failed.length));
+			summary.setAttribute(
+				"data-result",
+				failed.length === 0 ? "pass" : "fail",
+			);
+			summary.textContent =
+				failed.length === 0
+					? `All ${results.length} tests passed`
+					: `${failed.length}/${results.length} tests failed: ` +
+						failed.map((r) => `${r.name}: ${r.error}`).join("; ");
+			document.body.appendChild(summary);
+		}
+
+		document.addEventListener("libcurl_load", () => {
+			runTests().catch((e) => {
+				console.error("Test runner crashed:", e);
+				const el = document.createElement("div");
+				el.id = "test-summary";
+				el.setAttribute("data-result", "fail");
+				el.textContent = "Test runner crashed: " + e;
+				document.body.appendChild(el);
+			});
+		});
+		</script>
+	</body>
+</html>

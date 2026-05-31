@@ -1,11 +1,13 @@
 --- a/build.sh
 +++ b/build.sh
-@@ -37,8 +37,8 @@
+@@ -36,9 +36,9 @@
+ EXPORTED_FUNCS="${EXPORTED_FUNCS:1}"
  
  #compile options
- RUNTIME_METHODS="addFunction,removeFunction,allocate,ALLOC_NORMAL"
+-RUNTIME_METHODS="addFunction,removeFunction,allocate,ALLOC_NORMAL"
 -COMPILER_OPTIONS="-o $MODULE_FILE -lcurl -lmbedtls -lmbedcrypto -lmbedx509 -lcjson -lz -lbrotlidec -lbrotlicommon -lnghttp2 -I $INCLUDE_DIR -L $LIB_DIR"
 -EMSCRIPTEN_OPTIONS="-lwebsocket.js -sENVIRONMENT=worker,web -sASSERTIONS=1 -sLLD_REPORT_UNDEFINED -sALLOW_TABLE_GROWTH -sALLOW_MEMORY_GROWTH -sNO_EXIT_RUNTIME -sEXPORTED_FUNCTIONS=$EXPORTED_FUNCS -sEXPORTED_RUNTIME_METHODS=$RUNTIME_METHODS"
++RUNTIME_METHODS="addFunction,removeFunction,allocate,ALLOC_NORMAL,HEAP8,HEAPU8,HEAP16,HEAPU16,HEAP32,HEAPU32,HEAPF32,HEAPF64"
 +COMPILER_OPTIONS="-o $MODULE_FILE -lcurl -lssl -lcrypto -lcjson -lz -lbrotlidec -lbrotlicommon -lnghttp2 -lzstd -I $INCLUDE_DIR -L $LIB_DIR"
 +EMSCRIPTEN_OPTIONS="-lwebsocket.js -sENVIRONMENT=worker,web -sASSERTIONS=1 -sLLD_REPORT_UNDEFINED -sALLOW_TABLE_GROWTH -sALLOW_MEMORY_GROWTH -sNO_EXIT_RUNTIME -sEXPORTED_FUNCTIONS=$EXPORTED_FUNCS -sEXPORTED_RUNTIME_METHODS=$RUNTIME_METHODS" # TODO: add "--emit-tsd out.d.ts" @ emscripten 6.0.0
  

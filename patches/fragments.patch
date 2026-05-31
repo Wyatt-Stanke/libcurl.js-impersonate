@@ -1,0 +1,39 @@
+--- a/fragments/load_later.js
++++ b/fragments/load_later.js
+@@ -11,6 +11,11 @@
+ else var wasmExports = null;
+ 
+ /* REPLACE
++var wasmExports;createWasm\(\);
++*/
++var wasmExports;createWasm();
++
++/* REPLACE
+ run\(\);\n\n
+ */
+-if (wasmBinaryFile && isDataURI(wasmBinaryFile)) run();
+\ No newline at end of file
++run();
+\ No newline at end of file
+--- a/fragments/force_wsproxy.js
++++ b/fragments/force_wsproxy.js
+@@ -6,7 +6,7 @@
+ url += parts[0] + ":" + port;
+ 
+ /* REPLACE
+-url ?= ?SOCKFS\.websocketArgs\[['"]url['"]\];
++(url ?= ?SOCKFS\.websocketArgs\[['"]url['"]\];|if\(SOCKFS\.websocketArgs\["url"\]\)\{url=SOCKFS\.websocketArgs\["url"\]\})
+ */
+ var parts = addr.split("/");
+ url = Module.websocket.url;
+--- a/javascript/main.js
++++ b/javascript/main.js
+@@ -91,7 +91,7 @@
+   if (wasm_ready) return;
+ 
+   //skip this if we are running in single file mode
+-  if (!wasmBinaryFile || !isDataURI(wasmBinaryFile)) {
++  if (!wasmBinaryFile) {
+     wasmBinaryFile = url;
+     createWasm();
+     run();  
