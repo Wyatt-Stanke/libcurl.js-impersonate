@@ -24,6 +24,7 @@ CLIENT_DIR="$LIBCURL_JS_DIR/client"
 
 echo "Applying build overrides..."
 git -C "$LIBCURL_JS_DIR" checkout -- client/build.sh client/tools/curl.sh client/libcurl/http.c client/fragments/load_later.js client/fragments/force_wsproxy.js client/javascript/main.js
+git -C "$LIBCURL_JS_DIR" clean -fx client/fragments/
 patch -p1 -d "$CLIENT_DIR" <"$SCRIPT_DIR/patches/build.patch"
 patch -p1 -d "$CLIENT_DIR" <"$SCRIPT_DIR/patches/curl.patch"
 patch -p1 -d "$CLIENT_DIR" <"$SCRIPT_DIR/patches/http.patch"
