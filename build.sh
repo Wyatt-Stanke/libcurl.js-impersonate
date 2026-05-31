@@ -7,12 +7,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LIBCURL_JS_DIR="$SCRIPT_DIR/libcurl.js"
 OUT_DIR="$SCRIPT_DIR/out"
 
-EMSDK_ENV="$HOME/emsdk/emsdk_env.sh"
-if [ ! -f "$EMSDK_ENV" ]; then
-	echo "ERROR: emsdk not found at \$HOME/emsdk."
-	exit 1
+if ! command -v emcc >/dev/null 2>&1; then
+	EMSDK_ENV="$HOME/emsdk/emsdk_env.sh"
+	if [ ! -f "$EMSDK_ENV" ]; then
+		echo "ERROR: emcc not found on PATH and no emsdk at \$HOME/emsdk." >&2
+		exit 1
+	fi
+	source "$EMSDK_ENV"
 fi
-source "$EMSDK_ENV"
 echo "emcc: $(emcc --version | head -1)"
 
 echo "Initializing submodules..."
