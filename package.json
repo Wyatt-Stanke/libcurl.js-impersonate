@@ -28,7 +28,7 @@
     "@mercuryworkshop/wisp-js": "0.4.1",
     "@playwright/test": "1.61.0",
     "execa": "9.6.1",
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   },
   "license": "AGPL-3.0-only",
   "packageManager": "pnpm@11.5.0"
